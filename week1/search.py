@@ -5,7 +5,7 @@ from flask import (
     Blueprint, redirect, render_template, request, url_for
 )
 
-from week1_finished.opensearch import get_opensearch
+from week1.opensearch import get_opensearch
 
 bp = Blueprint('search', __name__, url_prefix='/search')
 
@@ -20,14 +20,25 @@ def process_filters(filters_input):
     display_filters = []  # Also create the text we will use to display the filters that are applied
     applied_filters = ""
     for filter in filters_input:
-        type = request.args.get(filter + ".type")
+        type = request.args.get(filter + ".type") 
         display_name = request.args.get(filter + ".displayName", filter)
         applied_filters += "&filter.name={}&{}.type={}&{}.displayName={}".format(filter, filter, type, filter,
                                                                                  display_name)
         if type == "range":
-            pass #TODO: IMPLEMENT
+            filter_range_from = request.args.get(f"{filter}.from") or None
+            filter_range_to = request.args.get(f"{filter}.to") or None
+            filters.append({
+                "range": {filter: {"gte": filter_range_from, "lte": filter_range_to}}
+            })
+            display_filters.append(f"{filter}: ${filter_range_from} - ${filter_range_to}")
+            applied_filters += f"&{filter}.from={filter_range_from}&{filter}.to={filter_range_to}"
         elif type == "terms":
-            pass #TODO: IMPLEMENT
+            filter_key = request.args.get(filter + ".key")
+            filters.append({
+                "term": {f"{filter}.keyword": filter_key}
+            })
+            display_filters.append(f"{filter}: {filter_key}")
+            applied_filters += f"&{filter}.key={filter_key}"
     print("Filters: {}".format(filters))
 
     return filters, display_filters, applied_filters
@@ -70,10 +81,10 @@ def query():
         query_obj = create_query("*", [], sort, sortDir)
 
     print("query obj: {}".format(query_obj))
-    response = None   # TODO: Replace me with an appropriate call to OpenSearch
+    response = opensearch.search(query_obj)
     # Postprocess results here if you so desire
 
-    #print(response)
+    print("query response: {}".format(response))
     if error is None:
         return render_template("search_results.jinja2", query=user_query, search_response=response,
                                display_filters=display_filters, applied_filters=applied_filters,
@@ -87,10 +98,46 @@ def create_query(user_query, filters, sort="_score", sortDir="desc"):
     query_obj = {
         'size': 10,
         "query": {
-            "match_all": {} # Replace me with a query that both searches and filters
+            "bool": {
+                "must": {
+                    "query_string": {
+                        "fields": [ "name", "shortDescription", "longDescription"],
+                        "query": user_query,
+                        "phrase_slop": 3
+                    }
+                },
+                "filter": filters,
+            }
+        },
+        "sort": [{sort: sortDir}],
+        "highlight": {
+            "fields": {
+                "name": {},
+                "shortDescription": {},
+                "longDescription": {}
+            }
         },
         "aggs": {
-            #TODO: FILL ME IN
+            "regularPrice": {
+                "range": {
+                    "field": "regularPrice",
+                    "ranges": [
+                        {"key": "$", "to": 100.0},
+                        {"key": "$$", "from": 100.0, "to": 200.0},
+                        {"key": "$$$", "from": 200.0}
+                    ]
+                },
+            },
+            "department": {
+                "terms": {
+                    "field": "department.keyword"
+                }
+            },
+            "missing_images": {
+                "missing": {
+                    "field": "image.keyword"
+                }
+            }
         }
     }
     return query_obj

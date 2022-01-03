@@ -1,5 +1,45 @@
 {
   "settings": {
     "index.refresh_interval": "5s"
+  },
+  "mappings": {
+    "properties" : {
+      "regularPrice" : {
+        "type" : "float"
+      },
+      "name" : {
+        "type" : "text",
+        "analyzer": "english",
+        "fields" : {
+          "keyword" : {
+            "type" : "keyword",
+            "ignore_above" : 256
+          }
+        }
+      },
+      "shortDescription" : {
+        "type" : "text",
+        "analyzer": "english",
+        "fields" : {
+          "keyword" : {
+            "type" : "keyword",
+            "ignore_above" : 256
+          }
+        }
+      },
+      "longDescription" : {
+        "type" : "text",
+        "analyzer": "english",
+        "fields" : {
+          "keyword" : {
+            "type" : "keyword",
+            "ignore_above" : 256
+          }
+        }
+      },
+      "salesRankShortTerm" : {
+        "type" : "long"
+      }
+    }
   }
 }
