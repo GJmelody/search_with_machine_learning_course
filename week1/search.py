@@ -22,18 +22,24 @@ def process_filters(filters_input):
     for filter in filters_input:
         type = request.args.get(filter + ".type") 
         display_name = request.args.get(filter + ".displayName", filter)
+        
         applied_filters += "&filter.name={}&{}.type={}&{}.displayName={}".format(filter, filter, type, filter,
                                                                                  display_name)
         if type == "range":
-            filter_range_from = request.args.get(f"{filter}.from") or None
-            filter_range_to = request.args.get(f"{filter}.to") or None
+            filter_range_from = request.args.get(f"{filter}.from")
+            filter_range_to = request.args.get(f"{filter}.to")
             filters.append({
-                "range": {filter: {"gte": filter_range_from, "lte": filter_range_to}}
+                "range": {filter: {"gte": filter_range_from or None, "lte": filter_range_to or None}}
             })
-            display_filters.append(f"{filter}: ${filter_range_from} - ${filter_range_to}")
+            if filter_range_from and filter_range_to:
+                display_filters.append(f"{filter}: ${filter_range_from} - {filter_range_to}")
+            elif filter_range_from:
+                display_filters.append(f"{filter}: > ${filter_range_from}")
+            elif filter_range_to:
+                display_filters.append(f"{filter}: < ${filter_range_to}")         
             applied_filters += f"&{filter}.from={filter_range_from}&{filter}.to={filter_range_to}"
         elif type == "terms":
-            filter_key = request.args.get(filter + ".key")
+            filter_key = request.args.get(f"{filter}.key")
             filters.append({
                 "term": {f"{filter}.keyword": filter_key}
             })
