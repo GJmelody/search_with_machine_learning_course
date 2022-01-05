@@ -3,42 +3,48 @@
     "index.refresh_interval": "5s"
   },
   "mappings": {
-    "properties" : {
-      "regularPrice" : {
-        "type" : "float"
+    "properties": {
+      "regularPrice": {
+        "type": "float"
       },
-      "name" : {
-        "type" : "text",
+      "name": {
+        "type": "text",
         "analyzer": "english",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
           }
         }
       },
-      "shortDescription" : {
-        "type" : "text",
+      "shortDescription": {
+        "type": "text",
         "analyzer": "english",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
           }
         }
       },
-      "longDescription" : {
-        "type" : "text",
+      "longDescription": {
+        "type": "text",
         "analyzer": "english",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
           }
         }
       },
-      "salesRankShortTerm" : {
-        "type" : "long"
+      "salesRankShortTerm": {
+        "type": "long"
+      },
+      "salesRankLongTerm": {
+        "type": "long"
+      },
+      "salesRankMediumTerm": {
+        "type": "long"
       }
     }
   }
